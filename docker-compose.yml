@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres_solinces
+    ports:
+      - "5432:5432"
+    volumes:
+      - .data/:/tmp
+    environment:
+      POSTGRES_DB: solinces_db
+      POSTGRES_USER: solinces_user
+      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: solinces_password
+      PGDATA: /tmp
+
+  redis:
+    image: bitnami/redis:latest
+    container_name: redis_solinces
+    ports:
+      - "6379:6379"
+    environment:
+      ALLOW_EMPTY_PASSWORD: "no"
+      REDIS_PASSWORD: ABCDE
+
+  solinces:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/backend
+    command: >
+       sh -c "
+       python manage.py migrate &&
+       python manage.py runserver 0.0.0.0:8000
+       "
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
